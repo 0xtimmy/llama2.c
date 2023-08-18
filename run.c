@@ -13,8 +13,18 @@
     #include <unistd.h>
     #include <sys/mman.h>
 #endif
+
+long softmax_time = 0;
+
 // ----------------------------------------------------------------------------
 // Transformer and RunState structs, and related memory management
+
+long time_in_ms() {
+    // return time in milliseconds, for benchmarking the model speed
+    struct timespec time;
+    clock_gettime(CLOCK_REALTIME, &time);
+    return time.tv_sec * 1000000 + time.tv_nsec / 1000;
+}
 
 typedef struct {
     int dim; // transformer dimension
@@ -169,7 +179,7 @@ void rmsnorm(float* o, float* x, float* weight, int size) {
 void asm_exp2(float *x) {
     float out;
     int intx = (int)*x;
-    //float decx = *x - (float)intx;
+    float decx = *x - (float)intx;
 
     asm ("shl $23, %1\n\t"
         "add $1065353216, %1\n\t"
@@ -177,7 +187,7 @@ void asm_exp2(float *x) {
         : "=r" (*x)
         : "r" (intx)
     );
-    //*x = *x * (1+decx);
+    *x = *x * (1+decx);
 }
 
 // tok/sec = 204, 198, 204
@@ -215,7 +225,10 @@ void exp_softmax(float* x, int size) {
 
 void softmax(float* x, int size) {
     // find max value (for numerical stability)
-    exp2_softmax(x, size);
+    long start = time_in_ms();
+    //exp2_softmax(x, size);
+    exp_softmax(x, size);
+    softmax_time += (time_in_ms() - start);
 }
 
 void matmul(float* xout, float* x, float* w, int n, int d) {
@@ -487,13 +500,6 @@ void bpe_encode(char *text, char **vocab, float *vocab_scores, int vocab_size, u
 // ----------------------------------------------------------------------------
 // utilities: time / rng
 
-long time_in_ms() {
-    // return time in milliseconds, for benchmarking the model speed
-    struct timespec time;
-    clock_gettime(CLOCK_REALTIME, &time);
-    return time.tv_sec * 1000 + time.tv_nsec / 1000000;
-}
-
 unsigned long long rng_seed;
 unsigned int random_u32() {
     // xorshift rng: https://en.wikipedia.org/wiki/Xorshift#xorshift.2A
@@ -757,7 +763,8 @@ int main(int argc, char *argv[]) {
     // report achieved tok/s (pos-1 because the timer starts after first iteration)
     if (pos > 1) {
         long end = time_in_ms();
-        fprintf(stderr, "achieved tok/s: %f\n", (pos-1) / (double)(end-start)*1000);
+        fprintf(stderr, "achieved tok/s: %f\n", (pos-1) / (double)(end-start)*1000000);
+        fprintf(stderr, "time in softmax/tok = %ldns\n", softmax_time / (pos-1));
     }
 
     // memory and file handles cleanup

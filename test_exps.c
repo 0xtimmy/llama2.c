@@ -1,7 +1,7 @@
 #include<math.h>
+#include<stdlib.h>
 #include<stdio.h>
 #include <time.h>
-#include "win.h"
 
 long time_in_ms() {
     // return time in milliseconds, for benchmarking the model speed
@@ -40,7 +40,7 @@ int main() {
     }
     long exp_end = time_in_ms();
     for(int i = 0; i < TEST_SIZE; i++) {
-        exp2(nums[i]);
+        asm_exp2(nums + i);
     }
     long exp2_end = time_in_ms();
 
