@@ -169,7 +169,7 @@ void rmsnorm(float* o, float* x, float* weight, int size) {
 void asm_exp2(float *x) {
     float out;
     int intx = (int)*x;
-    float decx = *x - (float)intx;
+    //float decx = *x - (float)intx;
 
     asm ("shl $23, %1\n\t"
         "add $1065353216, %1\n\t"
@@ -177,7 +177,7 @@ void asm_exp2(float *x) {
         : "=r" (*x)
         : "r" (intx)
     );
-    *x = *x * (1+decx);
+    //*x = *x * (1+decx);
 }
 
 // tok/sec = 204, 198, 204

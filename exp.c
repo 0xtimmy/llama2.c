@@ -1,4 +1,5 @@
 #include<stdio.h>
+#include "win.h"
 
 void printbin(char *x, int truesize) {
 
