@@ -179,8 +179,35 @@ void rmsnorm(float* o, float* x, float* weight, int size) {
     }
 }
 
-void softmax(float* x, int size) {
-    // find max value (for numerical stability)
+void asm_exp2(float *x) {
+    float out;
+    int intx = (int)*x;
+    float decx = *x - (float)intx;
+
+    asm ("shl $23, %1\n\t"
+        "add $1065353216, %1\n\t"
+        "mov %1, %0"
+        : "=r" (*x)
+        : "r" (intx)
+    );
+    *x = *x * (1+decx);
+}
+
+// tok/sec = 204, 198, 204
+void exp2_softmax(float* x, int size) {
+    float sum = 0.0f;
+    for (int i = 0; i < size; i++) {
+        asm_exp2(x+i);
+        sum += x[i];
+    }
+    // normalize
+    for (int i = 0; i < size; i++) {
+        x[i] /= sum;
+    }
+}
+
+// tok/sec = 132, 131, 129
+void exp_softmax(float* x, int size) {
     float max_val = x[0];
     for (int i = 1; i < size; i++) {
         if (x[i] > max_val) {
@@ -197,6 +224,11 @@ void softmax(float* x, int size) {
     for (int i = 0; i < size; i++) {
         x[i] /= sum;
     }
+}
+
+void softmax(float* x, int size) {
+    // find max value (for numerical stability)
+    exp2_softmax(x, size);
 }
 
 void matmul(float* xout, float* x, float* w, int n, int d) {

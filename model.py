@@ -9,6 +9,11 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
+def softmax(x):
+    x = 1 << x
+    sum = F.sum(x)
+    return x / sum
+
 @dataclass
 class ModelArgs:
     dim: int = 4096
@@ -148,7 +153,7 @@ class Attention(nn.Module):
             scores = torch.matmul(xq, xk.transpose(2, 3)) / math.sqrt(self.head_dim)
             assert hasattr(self, 'mask')
             scores = scores + self.mask[:, :, :seqlen, :seqlen]   # (bs, n_local_heads, seqlen, cache_len + seqlen)
-            scores = F.softmax(scores.float(), dim=-1).type_as(xq)
+            scores = softmax(scores.float(), dim=-1).type_as(xq)
             scores = self.attn_dropout(scores)
             output = torch.matmul(scores, xv)  # (bs, n_local_heads, seqlen, head_dim)
 
@@ -330,7 +335,7 @@ class Transformer(nn.Module):
                     v, _ = torch.topk(logits, min(top_k, logits.size(-1)))
                     logits[logits < v[:, [-1]]] = -float('Inf')
                 # apply softmax to convert logits to (normalized) probabilities
-                probs = F.softmax(logits, dim=-1)
+                probs = softmax(logits, dim=-1)
                 idx_next = torch.multinomial(probs, num_samples=1)
             # append sampled index to the running sequence and continue
             idx = torch.cat((idx, idx_next), dim=1)
