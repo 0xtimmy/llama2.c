@@ -27,7 +27,7 @@ void asm_exp2(float *x) {
 
 int main() {
 
-    int TEST_SIZE = 1000000;
+    int TEST_SIZE = pow(10, 9);
 
     long exp_start = time_in_ms();
     float* nums = malloc(sizeof(float) * TEST_SIZE);
