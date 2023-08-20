@@ -26,6 +26,7 @@ void asm_exp2(float *x) {
 
 int main() {
 
+    int TEST_SIZE = pow(10, 9);
     /*
         over 10^10 iterations
         exp took on average  347.746002ms
