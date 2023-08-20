@@ -50,7 +50,7 @@ float* c_exp2(float *x) {
     printbin((char *)&base, sizeof(base));
     fprintf(stdout, "\n\n");
 
-    fprintf(stdout, "(in binary) (int)x = ");
+    fprintf(stdout, "(in binary) (int)x = %d = ", intx);
     printbin((char *)&intx, sizeof(intx));
     fprintf(stdout, "\n\n");
 
@@ -71,8 +71,11 @@ float* c_exp2(float *x) {
 }
 
 void main() {
-    float x = 4.569379;
+    float x = -4.569379;
 
+    c_exp2(&x);
+
+    /*
     fprintf(stdout, "x = %f = ", x);
     printbin((char *)&x, sizeof(x));
     fprintf(stdout, "\n");
@@ -80,6 +83,7 @@ void main() {
     fprintf(stdout, "exp2(x) = %f = ", x);
     printbin((char *)&x, sizeof(x));
     fprintf(stdout, "\n");
+    */
 
     return 0;
 }

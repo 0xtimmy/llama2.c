@@ -10,7 +10,7 @@ import torch.nn.functional as F
 from torch import nn
 
 def softmax(x):
-    x = (1 << floor(x)) * (1 + (x - floor(x)))
+    x = (1 << F.floor(x)) * (1 + (x - F.floor(x)))
     sum = F.sum(x)
     return x / sum
 

@@ -5,8 +5,8 @@ CC = gcc
 # the most basic way of building that is most likely to work on most systems
 .PHONY: run
 run: run.c
-#	x86_64-w64-mingw32-gcc -Ofast -D_WIN32 -o run.exe -I. run.c win.c
-	$(CC) -O3 -o run run.c -lm -lrt
+	x86_64-w64-mingw32-gcc -Ofast -D_WIN32 -o run.exe -I. run.c win.c
+#	$(CC) -O3 -o run run.c -lm -lrt
 
 # useful for a debug build, can then e.g. analyze with valgrind, example:
 # $ valgrind --leak-check=full ./run out/model.bin -n 3

@@ -23,7 +23,7 @@ long time_in_ms() {
     // return time in milliseconds, for benchmarking the model speed
     struct timespec time;
     clock_gettime(CLOCK_REALTIME, &time);
-    return time.tv_sec * 1000000 + time.tv_nsec / 1000;
+    return time.tv_sec * 1000 + time.tv_nsec / 1000000;
 }
 
 typedef struct {
@@ -177,8 +177,7 @@ void rmsnorm(float* o, float* x, float* weight, int size) {
 }
 
 void asm_exp2(float *x) {
-    float out;
-    int intx = (int)*x;
+    int intx = (int)*x - ((*x < 0) ? 1 : 0);
     float decx = *x - (float)intx;
 
     asm ("shl $23, %1\n\t"
@@ -187,7 +186,7 @@ void asm_exp2(float *x) {
         : "=r" (*x)
         : "r" (intx)
     );
-    *x = *x * (1+decx);
+    *x = *x * (1.0 + decx);
 }
 
 // tok/sec = 204, 198, 204
@@ -763,8 +762,9 @@ int main(int argc, char *argv[]) {
     // report achieved tok/s (pos-1 because the timer starts after first iteration)
     if (pos > 1) {
         long end = time_in_ms();
-        fprintf(stderr, "achieved tok/s: %f\n", (pos-1) / (double)(end-start)*1000000);
+        fprintf(stderr, "achieved tok/s: %f\n", (float)(pos-1) / (float)(end-start)*1000.0);
         fprintf(stderr, "time in softmax/tok = %ldns\n", softmax_time / (pos-1));
+        fprintf(stderr, "softmax %% of total time: %f", (double)softmax_time/(double)(end-start));
     }
 
     // memory and file handles cleanup
